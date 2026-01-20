@@ -1,0 +1,472 @@
+<app-component-card title="{{isStudentLogin ? 'Student Registration' : 'Admin Registration'}}">
+  <form (ngSubmit)="onSubmit()" class="p-4">
+    <!-- Mobile View: 3-Step Wizard -->
+    <div class="block md:hidden">
+      <!-- Step Indicator -->
+      <div class="mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center space-x-2 flex-1">
+            <div class="flex-1">
+              <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-brand-500 transition-all duration-300" 
+                     [style.width.%]="(currentStep / totalSteps) * 100"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-between text-sm">
+          <span [class.text-brand-500]="currentStep >= 1" [class.text-gray-500]="currentStep < 1" class="font-medium text-xs">
+            Personal
+          </span>
+          <span [class.text-brand-500]="currentStep >= 2" [class.text-gray-500]="currentStep < 2" class="font-medium text-xs">
+            Course
+          </span>
+          <span [class.text-brand-500]="currentStep >= 3" [class.text-gray-500]="currentStep < 3" class="font-medium text-xs">
+            Document
+          </span>
+          <span [class.text-brand-500]="currentStep >= 4" [class.text-gray-500]="currentStep < 4" class="font-medium text-xs">
+            Confirmation
+          </span>
+        </div>
+      </div>
+
+      <!-- Step 1: Personal Information -->
+      <div *ngIf="currentStep === 1" class="space-y-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
+        
+        <div>
+          <app-label>First Name *</app-label>
+          <app-input-field type="text" placeholder="First Name" name="firstName" [value]="adminForm.firstName"
+            (valueChange)="handleFieldChange('firstName','firstName',$event)" />
+          <div *ngIf="registrationForm.get('firstName')?.invalid && registrationForm.get('firstName')?.touched" 
+               class="text-red-500 text-sm mt-1">First name is required</div>
+        </div>
+
+        <div>
+          <app-label>Last Name *</app-label>
+          <app-input-field type="text" placeholder="Last Name" name="lastName" [value]="adminForm.lastName"
+            (valueChange)="handleFieldChange('lastName','lastName',$event)" />
+          <div *ngIf="registrationForm.get('lastName')?.invalid && registrationForm.get('lastName')?.touched" 
+               class="text-red-500 text-sm mt-1">Last name is required</div>
+        </div>
+
+        <div>
+          <app-label>Identification Type</app-label>
+          <app-select [options]="idTypes" [value]="adminForm.idType"
+            (valueChange)="handleFieldChange('idType','idType',$event)" placeholder="Select ID type"></app-select>
+        </div>
+
+        <div *ngIf="adminForm.idType === 'idNumber'">
+          <app-label>ID Number *</app-label>
+          <app-input-field type="text" (keypress)="numbersValidation($event)" placeholder="ID Number" name="idNumber"
+            [value]="adminForm.idNumber" (valueChange)="handleFieldChange('idNumber','idNumber',$event)" />
+          <div *ngIf="registrationForm.get('idNumber')?.invalid && registrationForm.get('idNumber')?.touched" 
+               class="text-red-500 text-sm mt-1">Valid ID number is required</div>
+        </div>
+
+        <div *ngIf="adminForm.idType === 'passport'">
+          <app-label>Passport *</app-label>
+          <app-input-field type="text" placeholder="Passport" name="passport" [value]="adminForm.passport"
+            (valueChange)="handleFieldChange('passport','passport',$event)" />
+          <div *ngIf="registrationForm.get('passport')?.invalid && registrationForm.get('passport')?.touched" 
+               class="text-red-500 text-sm mt-1">Passport is required</div>
+        </div>
+
+        <div>
+          <app-label>Email address</app-label>
+          <app-input-field type="email" placeholder="email@example.com" name="email" [value]="adminForm.email"
+            (valueChange)="handleFieldChange('email','email',$event)" />
+          <div *ngIf="registrationForm.get('email')?.invalid && registrationForm.get('email')?.touched" 
+               class="text-red-500 text-sm mt-1">Valid email is required</div>
+        </div>
+
+        <div>
+          <app-label>Cell Phone *</app-label>
+          <app-input-field type="text" placeholder="+123 456 7890" name="cellPhone" [value]="adminForm.cellPhone"
+            (valueChange)="handleFieldChange('cellPhone','cellphone',$event)" />
+          <div *ngIf="registrationForm.get('cellphone')?.invalid && registrationForm.get('cellphone')?.touched" 
+               class="text-red-500 text-sm mt-1">Cell phone is required</div>
+        </div>
+
+        <div class="flex justify-end mt-6">
+          <button type="button" (click)="nextStep(); $event.preventDefault(); $event.stopPropagation();"
+            class="inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-brand-500 rounded-lg shadow-theme-xs hover:bg-brand-600">
+            Next
+            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Course & Address -->
+      <div *ngIf="currentStep === 2" class="space-y-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Course & Address</h3>
+
+        <div *ngIf="isStudentLogin">
+          <app-label>Branches *</app-label>
+          <app-select [options]="branchOptions" [value]="selectedBranch"
+            (valueChange)="handleBranchChange($event)"
+            placeholder="Select branch"></app-select>
+          <div *ngIf="isStudentLogin && !selectedBranch" class="text-red-500 text-sm mt-1">Branch is required</div>
+        </div>
+
+        <div>
+          <app-label>Course *</app-label>
+          <app-select [options]="courseOptions" [value]="adminForm.course"
+            (valueChange)="handleFieldChange('course','course',$event); getOustandingAmount()"
+            placeholder="Select course"></app-select>
+          <div *ngIf="registrationForm.get('course')?.invalid && registrationForm.get('course')?.touched" 
+               class="text-red-500 text-sm mt-1">Course is required</div>
+        </div>
+
+        <div>
+          <app-label>Registration Date *</app-label>
+          <app-date-picker 
+            id="reg-date-mobile" 
+            placeholder="yyyy/mm/dd"
+            [defaultDate]="adminForm.registrationDate || registrationForm.value.registrationDate"
+            (dateChange)="handleDateChange($event)"></app-date-picker>
+          <div *ngIf="!adminForm.registrationDate && !registrationForm.value.registrationDate" class="text-red-500 text-sm mt-1">Registration date is required</div>
+        </div>
+
+        <div>
+          <app-label>Commencement Date *</app-label>
+          <app-date-picker 
+            id="comm-date-mobile" 
+            placeholder="yyyy/mm/dd"
+            [defaultDate]="adminForm.commencementDate || registrationForm.value.commencementDate"
+            (dateChange)="handleCommencementDateChange($event)"></app-date-picker>
+          <div *ngIf="!adminForm.commencementDate && !registrationForm.value.commencementDate" class="text-red-500 text-sm mt-1">Commencement date is required</div>
+        </div>
+
+        <div>
+          <app-label>Street Address *</app-label>
+          <app-input-field type="text" placeholder="Street Address" name="streetAddress" [value]="adminForm.streetAddress"
+            (valueChange)="handleFieldChange('streetAddress','streetAddress',$event)" />
+          <div *ngIf="registrationForm.get('streetAddress')?.invalid && registrationForm.get('streetAddress')?.touched" 
+               class="text-red-500 text-sm mt-1">Street address is required</div>
+        </div>
+
+        <div>
+          <app-label>City *</app-label>
+          <app-input-field type="text" placeholder="City" name="city" [value]="adminForm.city"
+            (valueChange)="handleFieldChange('city','city',$event)" />
+          <div *ngIf="registrationForm.get('city')?.invalid && registrationForm.get('city')?.touched" 
+               class="text-red-500 text-sm mt-1">City is required</div>
+        </div>
+
+        <div>
+          <app-label>Address line 1</app-label>
+          <app-input-field type="text" placeholder="Address line 1" name="address1" [value]="adminForm.address1"
+            (valueChange)="handleFieldChange('address1','line1',$event)" />
+        </div>
+
+        <div>
+          <app-label>Address line 2</app-label>
+          <app-input-field type="text" placeholder="Address line 2" name="address2" [value]="adminForm.address2"
+            (valueChange)="handleFieldChange('address2','line2',$event)" />
+        </div>
+
+        <div>
+          <app-label>Postal Code *</app-label>
+          <app-input-field type="text" placeholder="Postal Code" name="postalCode" [value]="adminForm.postalCode"
+            (valueChange)="handleFieldChange('postalCode','postalCode',$event)" />
+          <div *ngIf="registrationForm.get('postalCode')?.invalid && registrationForm.get('postalCode')?.touched" 
+               class="text-red-500 text-sm mt-1">Postal code is required</div>
+        </div>
+
+        <div>
+          <app-label>Referral</app-label>
+          <app-select [options]="referralOptions" [value]="adminForm.referral"
+            (valueChange)="handleFieldChange('referral','referral',$event)"
+            placeholder="Select referral (optional)"></app-select>
+        </div>
+
+        <div class="flex justify-between mt-6">
+          <button type="button" (click)="previousStep()"
+            class="inline-flex items-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg shadow-theme-xs hover:bg-gray-200">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Previous
+          </button>
+          <button type="button" (click)="nextStep(); $event.preventDefault(); $event.stopPropagation();"
+            class="inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-brand-500 rounded-lg shadow-theme-xs hover:bg-brand-600">
+            Next
+            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Document Upload -->
+      <div *ngIf="currentStep === 3" class="space-y-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Document Upload</h3>
+
+        <div>
+          <app-label>Receipt Reference</app-label>
+          <app-input-field type="text" placeholder="Receipt Reference" name="receiptReference"
+            [value]="adminForm.receiptReference"
+            (valueChange)="handleFieldChange('receiptReference','recieptReference',$event)" />
+        </div>
+
+        <div>
+          <app-label>Upload Identification Document *</app-label>
+          <app-dropzone (filesDropped)="onFilesDropped($event)" class="w-full"></app-dropzone>
+          <div *ngIf="registrationForm.get('idDocument')?.invalid && registrationForm.get('idDocument')?.touched" 
+               class="text-red-500 text-sm mt-1">Identification document is required</div>
+        </div>
+
+        <div class="flex justify-between mt-6">
+          <button type="button" (click)="previousStep()"
+            class="inline-flex items-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg shadow-theme-xs hover:bg-gray-200">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Previous
+          </button>
+          <button type="button" (click)="nextStep(); $event.preventDefault(); $event.stopPropagation();"
+            class="inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-brand-500 rounded-lg shadow-theme-xs hover:bg-brand-600">
+            Next
+            <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 4: Confirmation -->
+      <div *ngIf="currentStep === 4" class="space-y-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Confirmation</h3>
+
+        <div>
+          <app-label>Amount Paid *</app-label>
+          <app-input-field type="number" (focusout)="getOustandingAmount()" placeholder="Amount Paid" name="amountPaid"
+            [value]="adminForm.amountPaid" (valueChange)="handleFieldChange('amountPaid','amountPaid',$event)" />
+          <div *ngIf="registrationForm.get('amountPaid')?.invalid && registrationForm.get('amountPaid')?.touched" 
+               class="text-red-500 text-sm mt-1">Amount paid is required</div>
+        </div>
+
+        <div>
+          <app-label>Outstanding Amount</app-label>
+          <app-input-field type="number" [disabled]="true" placeholder="Outstanding Amount" name="outstandingAmount"
+            [value]="adminForm.outstandingAmount" />
+        </div>
+
+        <div class="flex justify-between mt-6">
+          <button type="button" (click)="previousStep()"
+            class="inline-flex items-center px-6 py-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg shadow-theme-xs hover:bg-gray-200">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+            </svg>
+            Previous
+          </button>
+          <div class="flex gap-3">
+            <!-- <button type="button" (click)="onPayWithYoco()"
+              class="inline-flex items-center px-5 py-3 text-sm font-medium text-white bg-green-600 rounded-lg shadow-theme-xs hover:bg-green-700">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+              </svg>
+              Pay with Yoco
+            </button> -->
+            <button type="submit"
+              class="inline-flex items-center px-6 py-3 text-sm font-medium text-white bg-brand-500 rounded-lg shadow-theme-xs hover:bg-brand-600">
+              SUBMIT
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop View: Regular Form -->
+    <div class="hidden md:block">
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <!-- First Name -->
+        <div>
+          <app-label>First Name *</app-label>
+          <app-input-field type="text" placeholder="First Name" name="firstName" [value]="adminForm.firstName"
+            (valueChange)="handleFieldChange('firstName','firstName',$event)" />
+        </div>
+
+        <!-- Last Name -->
+        <div>
+          <app-label>Last Name *</app-label>
+          <app-input-field type="text" placeholder="Last Name" name="lastName" [value]="adminForm.lastName"
+            (valueChange)="handleFieldChange('lastName','lastName',$event)" />
+        </div>
+
+        <!-- Identification Type -->
+        <div>
+          <app-label>Identification Type</app-label>
+          <app-select [options]="idTypes" [value]="adminForm.idType"
+            (valueChange)="handleFieldChange('idType','idType',$event)" placeholder="Select ID type"></app-select>
+        </div>
+
+        <!-- ID Number -->
+        <div *ngIf="adminForm.idType === 'idNumber'">
+          <app-label>ID Number</app-label>
+          <app-input-field type="text" (keypress)="numbersValidation($event)" placeholder="ID Number" name="idNumber"
+            [value]="adminForm.idNumber" (valueChange)="handleFieldChange('idNumber','idNumber',$event)" />
+        </div>
+        <!-- Passport -->
+        <div *ngIf="adminForm.idType === 'passport'">
+          <app-label>Passport</app-label>
+          <app-input-field type="text" placeholder="Passport" name="passport" [value]="adminForm.passport"
+            (valueChange)="handleFieldChange('passport','passport',$event)" />
+        </div>
+
+
+        <!-- Registration Date -->
+        <div>
+          <app-label>Registration Date *</app-label>
+          <app-date-picker 
+            id="reg-date" 
+            placeholder="yyyy/mm/dd"
+            [defaultDate]="adminForm.registrationDate || registrationForm.value.registrationDate"
+            (dateChange)="handleDateChange($event)"></app-date-picker>
+        </div>
+
+        <!-- Commencement Date -->
+        <div>
+          <app-label>Commencement Date *</app-label>
+          <app-date-picker 
+            id="comm-date" 
+            placeholder="yyyy/mm/dd"
+            [defaultDate]="adminForm.commencementDate || registrationForm.value.commencementDate"
+            (dateChange)="handleCommencementDateChange($event)"></app-date-picker>
+        </div>
+
+        <!-- Email -->
+        <div>
+          <app-label>Email address</app-label>
+          <app-input-field type="email" placeholder="email@example.com" name="email" [value]="adminForm.email"
+            (valueChange)="handleFieldChange('email','email',$event)" />
+        </div>
+
+        <!-- Cell Phone -->
+        <div>
+          <app-label>Cell Phone *</app-label>
+          <app-input-field type="text" placeholder="+123 456 7890" name="cellPhone" [value]="adminForm.cellPhone"
+            (valueChange)="handleFieldChange('cellPhone','cellphone',$event)" />
+        </div>
+
+        <!-- Branches -->
+        <div *ngIf="isStudentLogin">
+          <app-label>Branches *</app-label>
+          <app-select [options]="branchOptions" [value]="selectedBranch"
+            (valueChange)="handleBranchChange($event)"
+            placeholder="Select branch"></app-select>
+        </div>
+
+        <!-- Course -->
+        <div>
+          <app-label>Course *</app-label>
+          <app-select [options]="courseOptions" [value]="adminForm.course"
+            (valueChange)="handleFieldChange('course','course',$event); getOustandingAmount()"
+            placeholder="Select course"></app-select>
+        </div>
+
+        <!-- Amount Paid -->
+        <div>
+          <app-label>Amount Paid *</app-label>
+          <app-input-field type="number" (focusout)="getOustandingAmount()" placeholder="Amount Paid" name="amountPaid"
+            [value]="adminForm.amountPaid" (valueChange)="handleFieldChange('amountPaid','amountPaid',$event)" />
+        </div>
+
+        <!-- Outstanding Amount -->
+        <div>
+          <app-label>Outstanding Amount</app-label>
+          <app-input-field type="number" [disabled]="true" placeholder="Outstanding Amount" name="outstandingAmount"
+            [value]="adminForm.outstandingAmount" />
+        </div>
+
+        <!-- Street Address -->
+        <div>
+          <app-label>Street Address</app-label>
+          <app-input-field type="text" placeholder="Street Address" name="streetAddress" [value]="adminForm.streetAddress"
+            (valueChange)="handleFieldChange('streetAddress','streetAddress',$event)" />
+        </div>
+
+        <!-- City -->
+        <div>
+          <app-label>City *</app-label>
+          <app-input-field type="text" placeholder="City" name="city" [value]="adminForm.city"
+            (valueChange)="handleFieldChange('city','city',$event)" />
+        </div>
+
+        <!-- Address Line 1 -->
+        <div>
+          <app-label>Address line 1</app-label>
+          <app-input-field type="text" placeholder="Address line 1" name="address1" [value]="adminForm.address1"
+            (valueChange)="handleFieldChange('address1','line1',$event)" />
+        </div>
+
+        <!-- Address Line 2 -->
+        <div>
+          <app-label>Address line 2</app-label>
+          <app-input-field type="text" placeholder="Address line 2" name="address2" [value]="adminForm.address2"
+            (valueChange)="handleFieldChange('address2','line2',$event)" />
+        </div>
+
+        <!-- Postal Code -->
+        <div>
+          <app-label>Postal Code</app-label>
+          <app-input-field type="text" placeholder="Postal Code" name="postalCode" [value]="adminForm.postalCode"
+            (valueChange)="handleFieldChange('postalCode','postalCode',$event)" />
+        </div>
+
+        <!-- Receipt Reference -->
+        <div>
+          <app-label>Receipt Reference</app-label>
+          <app-input-field type="text" placeholder="Receipt Reference" name="receiptReference"
+            [value]="adminForm.receiptReference"
+            (valueChange)="handleFieldChange('receiptReference','recieptReference',$event)" />
+        </div>
+
+        <!-- Referral -->
+        <div>
+          <app-label>Referral</app-label>
+          <app-select [options]="referralOptions" [value]="adminForm.referral"
+            (valueChange)="handleFieldChange('referral','referral',$event)"
+            placeholder="Select referral (optional)"></app-select>
+        </div>
+
+        <!-- File upload (dropzone) -->
+        <div class="sm:col-span-2">
+          <app-label>Upload Identification Document</app-label>
+          <app-dropzone (filesDropped)="onFilesDropped($event)" class="w-full"></app-dropzone>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex justify-end gap-3 mt-6">
+        <!-- <button type="button" (click)="onPayWithYoco()"
+          class="inline-flex items-center px-5 py-3 text-sm font-medium text-white bg-green-600 rounded-lg shadow-theme-xs hover:bg-green-700">
+          <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+          </svg>
+          Pay with Yoco
+        </button> -->
+        <button type="submit"
+          class="inline-flex items-center px-5 py-3 text-sm font-medium text-white bg-brand-500 rounded-lg shadow-theme-xs hover:bg-brand-600">
+          SUBMIT
+        </button>
+        <!-- Debug: show request and values and errors -->
+         <!-- <div class="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg">
+          <h3 class="font-bold mb-2">Admin Form (Request)</h3>
+          <pre class="text-xs overflow-auto">{{ getAdminFormForDebug() | json }}</pre>
+          <h3 class="font-bold mt-4 mb-2">Reactive Form Values</h3>
+          <pre class="text-xs overflow-auto">{{ registrationForm.value | json }}</pre>
+          <h3 class="font-bold mt-4 mb-2">Form-Level Errors</h3>
+          <pre class="text-xs overflow-auto">{{ registrationForm.errors | json }}</pre>
+          <h3 class="font-bold mt-4 mb-2">All Control Errors</h3>
+          <pre class="text-xs overflow-auto">{{ getAllFormErrors() | json }}</pre>
+          <h3 class="font-bold mt-4 mb-2">Form Valid: {{ registrationForm.valid }}</h3>
+          <h3 class="font-bold mt-2 mb-2">Form Touched: {{ registrationForm.touched }}</h3>
+         </div> -->
+      </div>
+    </div>
+  </form>
+</app-component-card>

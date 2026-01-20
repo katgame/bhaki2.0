@@ -1,0 +1,282 @@
+<div
+  class="overflow-hidden rounded-2xl border border-gray-200 bg-white pt-4 dark:border-white/[0.05] dark:bg-white/[0.03]">
+  <div class="flex flex-col gap-4 px-6 mb-4 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">
+        All Registrations
+      </h3>
+    </div>
+    <div class="flex items-center gap-3">
+      <input
+        type="text"
+        placeholder="Search registrations..."
+        [ngModel]="searchQuery"
+        (ngModelChange)="searchQuery = $event; applyFilters()"
+        class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-700"
+      />
+      <button
+        type="button"
+        (click)="toggleFilters()"
+        class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200">
+        <svg class="stroke-current fill-white dark:fill-gray-800" width="20" height="20" viewBox="0 0 20 20" fill="none"
+          xmlns="http://www.w3.org/2000/svg">
+          <path d="M2.29004 5.90393H17.7067" stroke="" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round"></path>
+          <path d="M17.7075 14.0961H2.29085" stroke="" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round"></path>
+          <path
+            d="M12.0826 3.33331C13.5024 3.33331 14.6534 4.48431 14.6534 5.90414C14.6534 7.32398 13.5024 8.47498 12.0826 8.47498C10.6627 8.47498 9.51172 7.32398 9.51172 5.90415C9.51172 4.48432 10.6627 3.33331 12.0826 3.33331Z"
+            fill="" stroke="" stroke-width="1.5"></path>
+          <path
+            d="M7.91745 11.525C6.49762 11.525 5.34662 12.676 5.34662 14.0959C5.34661 15.5157 6.49762 16.6667 7.91745 16.6667C9.33728 16.6667 10.4883 15.5157 10.4883 14.0959C10.4883 12.676 9.33728 11.525 7.91745 11.525Z"
+            fill="" stroke="" stroke-width="1.5"></path>
+        </svg>
+        {{ showFilters ? 'Hide Filters' : 'Filter' }}
+      </button>
+      <button
+        type="button"
+        (click)="clearFilters()"
+        class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200">
+        Clear
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Panel -->
+  <div *ngIf="showFilters" class="px-6 pb-4 border-b border-gray-200 dark:border-white/[0.05]">
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div>
+        <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Branch</label>
+        <app-select
+          [options]="branchOptionsWithAll"
+          [value]="selectedBranch"
+          (valueChange)="selectedBranch = $event; applyFilters()"
+          placeholder="Select Branch">
+        </app-select>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Date From</label>
+        <app-date-picker
+          id="date-from"
+          placeholder="Select start date"
+          [defaultDate]="dateFrom"
+          (dateChange)="handleDateFromChange($event)">
+        </app-date-picker>
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Date To</label>
+        <app-date-picker
+          id="date-to"
+          placeholder="Select end date"
+          [defaultDate]="dateTo"
+          (dateChange)="handleDateToChange($event)">
+        </app-date-picker>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-full overflow-x-auto">
+    <table class="min-w-full">
+      <thead class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-50 dark:border-white/[0.05] dark:bg-gray-900">
+        <tr>
+          <th 
+            (click)="sortData('registrationNumber')"
+            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+            <div class="flex items-center gap-2">
+              <span>Registration ID</span>
+              <span *ngIf="sortColumn === 'registrationNumber'" class="text-brand-500">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </div>
+          </th>
+          <th 
+            (click)="sortData('studentName')"
+            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+            <div class="flex items-center gap-2">
+              <span>Name</span>
+              <span *ngIf="sortColumn === 'studentName'" class="text-brand-500">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </div>
+          </th>
+          <th 
+            (click)="sortData('surname')"
+            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+            <div class="flex items-center gap-2">
+              <span>Surname</span>
+              <span *ngIf="sortColumn === 'surname'" class="text-brand-500">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </div>
+          </th>
+          <th 
+            (click)="sortData('registrationDate')"
+            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+            <div class="flex items-center gap-2">
+              <span>Registration Date</span>
+              <span *ngIf="sortColumn === 'registrationDate'" class="text-brand-500">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </div>
+          </th>
+          <th 
+            (click)="sortData('commencementDate')"
+            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+            <div class="flex items-center gap-2">
+              <span>Commencement Date</span>
+              <span *ngIf="sortColumn === 'commencementDate'" class="text-brand-500">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </div>
+          </th>
+          <th 
+            (click)="sortData('registrationBy')"
+            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+            <div class="flex items-center gap-2">
+              <span>Registered By</span>
+              <span *ngIf="sortColumn === 'registrationBy'" class="text-brand-500">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </div>
+          </th>
+          <th 
+            (click)="sortData('courseName')"
+            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+            <div class="flex items-center gap-2">
+              <span>Course Name</span>
+              <span *ngIf="sortColumn === 'courseName'" class="text-brand-500">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </div>
+          </th>
+          <th 
+            (click)="sortData('branchName')"
+            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+            <div class="flex items-center gap-2">
+              <span>Branch Name</span>
+              <span *ngIf="sortColumn === 'branchName'" class="text-brand-500">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </div>
+          </th>
+          <th 
+            (click)="sortData('studentId')"
+            class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800">
+            <div class="flex items-center gap-2">
+              <span>Id Number</span>
+              <span *ngIf="sortColumn === 'studentId'" class="text-brand-500">
+                {{ sortDirection === 'asc' ? '▲' : '▼' }}
+              </span>
+            </div>
+          </th>
+                    <th class="px-6 py-3 font-medium text-gray-500 text-theme-xs dark:text-gray-400 text-start">View</th> 
+        </tr>
+      </thead>
+      <tbody>
+        @for (row of paginatedData; track $index) {
+        <tr>
+          <td class="px-4 sm:px-6 py-3.5">
+            <div class="flex items-center gap-3">
+              <!-- <div>
+                <app-checkbox [checked]="selectedRows.includes(row.registrationNumber)"
+                  (checkedChange)="handleRowSelect(row.registrationNumber)" />
+              </div> -->
+              <div>
+                <span class="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
+                  {{ row.registrationNumber }}
+                </span>
+              </div>
+            </div>
+          </td>
+          <td class="px-4 sm:px-6 py-3.5">
+            <p class="text-gray-700 text-theme-sm dark:text-gray-400">
+              {{ row.studentName }}
+            </p>
+          </td>
+          <td class="px-4 sm:px-6 py-3.5">
+            <p class="text-gray-700 text-theme-sm dark:text-gray-400">
+              {{ row.surname }}
+            </p>
+          </td>
+          <td class="px-4 sm:px-6 py-3.5">
+            <p class="text-gray-700 text-theme-sm dark:text-gray-400">
+              {{ row.registrationDate | date:
+              'yyyy/MM/dd'}}
+            </p>
+          </td>
+          <td class="px-4 sm:px-6 py-3.5">
+            <p class="text-gray-700 text-theme-sm dark:text-gray-400">
+              {{ row.commencementDate | date:
+              'yyyy/MM/dd'}}
+            </p>
+          </td>
+          <td class="px-4 sm:px-6 py-3.5">
+            <p class="text-gray-700 text-theme-sm dark:text-gray-400">
+              {{ row.registrationBy }}
+            </p>
+          </td>
+          <td class="px-4 sm:px-6 py-3.5">
+            <p class="text-gray-700 text-theme-sm dark:text-gray-400">
+              {{ row.courseName }}
+            </p>
+          </td>
+          <td class="px-4 sm:px-6 py-3.5">
+            <p class="text-gray-700 text-theme-sm dark:text-gray-400">
+              {{ row.branchName }}
+            </p>
+          </td>
+          <td class="px-4 sm:px-6 py-3.5">
+            <p class="text-gray-700 text-theme-sm dark:text-gray-400">
+              {{ row.studentId }}
+            </p>
+          </td>
+           <!-- View -->
+           <td class="px-4 sm:px-6 py-3.5">
+            <div class="flex gap-2">
+
+              <button type="button" (click)="viewRegistration(row.registrationNumber)"
+                class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm">View</button>
+
+            </div>
+          </td>
+        </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+  <!-- ✅ Pagination Controls -->
+<div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-white/[0.05]">
+  <div class="text-sm text-gray-500 dark:text-gray-400">
+    Showing
+    {{ (currentPage - 1) * pageSize + 1 }}
+    -
+    {{ Math.min(currentPage * pageSize, filteredData.length) }}
+    of
+    {{ filteredData.length }}
+  </div>
+
+  <div class="flex items-center gap-2">
+    <button
+      (click)="goToPage(currentPage - 1)"
+      [disabled]="currentPage === 1"
+      class="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40">
+      Prev
+    </button>
+
+    <ng-container *ngFor="let page of [].constructor(totalPages); let i = index">
+      <button
+        (click)="goToPage(i + 1)"
+        [class.bg-gray-200]="currentPage === i + 1"
+        class="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50">
+        {{ i + 1 }}
+      </button>
+    </ng-container>
+
+    <button
+      (click)="goToPage(currentPage + 1)"
+      [disabled]="currentPage === totalPages"
+      class="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40">
+      Next
+    </button>
+  </div>
+</div>

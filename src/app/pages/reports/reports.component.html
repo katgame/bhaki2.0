@@ -1,0 +1,211 @@
+<app-page-breadcrumb [pageTitle]="'Reports'"></app-page-breadcrumb>
+
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+  <div class="lg:col-span-3 flex items-end gap-4 flex-wrap">
+    <div class="w-48" *ngIf="!isStudent">
+      <app-label>Branch</app-label>
+      <app-select
+        [options]="branchOptions"
+        [value]="selectedBranchId"
+        (valueChange)="onBranchChange($event)"
+        placeholder="Select Branch">
+      </app-select>
+    </div>
+    <div class="w-48">
+      <app-label>Preset</app-label>
+      <app-select
+        [options]="presetOptions"
+        [value]="selectedPreset"
+        (valueChange)="onPresetChange($event)"
+        placeholder="Select Preset">
+      </app-select>
+    </div>
+    <div class="w-48">
+      <app-label>Granularity</app-label>
+      <app-select
+        [options]="granularityOptions"
+        [value]="granularity"
+        (valueChange)="onGranularityChange($event)"
+        placeholder="Select Granularity">
+      </app-select>
+    </div>
+  </div>
+  <div class="flex justify-end items-end">
+    <button 
+      class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+      (click)="refresh()">
+      Refresh
+    </button>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" *ngIf="summary">
+  <div class="card shadow p-4">
+    <p class="text-sm text-gray-500">Today</p>
+    <p class="text-xl font-semibold">{{summary.today?.registrations}} regs</p>
+    <p class="text-xs text-gray-500">Paid {{summary.today?.paidAmount | number:'1.0-0'}} | Outstanding {{summary.today?.outstandingAmount | number:'1.0-0'}}</p>
+  </div>
+  <div class="card shadow p-4">
+    <p class="text-sm text-gray-500">Last 7 days</p>
+    <p class="text-xl font-semibold">{{summary.last7Days?.registrations}} regs</p>
+    <p class="text-xs text-gray-500">Paid {{summary.last7Days?.paidAmount | number:'1.0-0'}} | Outstanding {{summary.last7Days?.outstandingAmount | number:'1.0-0'}}</p>
+  </div>
+  <div class="card shadow p-4">
+    <p class="text-sm text-gray-500">Month to date</p>
+    <p class="text-xl font-semibold">{{summary.monthToDate?.registrations}} regs</p>
+    <p class="text-xs text-gray-500">Paid {{summary.monthToDate?.paidAmount | number:'1.0-0'}} | Outstanding {{summary.monthToDate?.outstandingAmount | number:'1.0-0'}}</p>
+  </div>
+  <div class="card shadow p-4">
+    <p class="text-sm text-gray-500">Year to date</p>
+    <p class="text-xl font-semibold">{{summary.yearToDate?.registrations}} regs</p>
+    <p class="text-xs text-gray-500">Paid {{summary.yearToDate?.paidAmount | number:'1.0-0'}} | Outstanding {{summary.yearToDate?.outstandingAmount | number:'1.0-0'}}</p>
+  </div>
+</div>
+
+<app-component-card title="Trend">
+  <apx-chart
+    [series]="series"
+    [chart]="chartOptions"
+    [xaxis]="xaxis"
+    [dataLabels]="dataLabels"
+    [stroke]="stroke"
+    [fill]="fill"
+    [grid]="grid"
+    [tooltip]="tooltip">
+  </apx-chart>
+</app-component-card>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+  <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white pt-4 dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div class="px-6 mb-4">
+      <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">By Branch</h3>
+    </div>
+    <div class="max-w-full overflow-x-auto">
+      <table class="min-w-full">
+        <thead class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-50 dark:border-white/[0.05] dark:bg-gray-900">
+          <tr>
+            <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Branch</th>
+            <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Regs</th>
+            <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Paid</th>
+            <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Outstanding</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let b of branchPageData">
+            <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ b.name }}</p></td>
+            <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ b.registrations }}</p></td>
+            <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ b.paidAmount | number:'1.0-0' }}</p></td>
+            <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ b.outstandingAmount | number:'1.0-0' }}</p></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-white/[0.05]">
+      <div class="text-sm text-gray-500 dark:text-gray-400">
+        Showing {{ branchStart }} - {{ branchEnd }} of {{ branchBreakdown.length }}
+      </div>
+      <div class="flex items-center gap-2">
+        <button (click)="prevBranch()" [disabled]="branchPage === 1"
+          class="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40">
+          Prev
+        </button>
+        <span class="text-sm text-gray-600 dark:text-gray-300">Page {{ branchPage }} / {{ branchTotalPages }}</span>
+        <button (click)="nextBranch()" [disabled]="branchPage === branchTotalPages"
+          class="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white pt-4 dark:border-white/[0.05] dark:bg-white/[0.03]">
+    <div class="px-6 mb-4">
+      <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">By Course</h3>
+    </div>
+    <div class="max-w-full overflow-x-auto">
+      <table class="min-w-full">
+        <thead class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-50 dark:border-white/[0.05] dark:bg-gray-900">
+          <tr>
+            <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Course</th>
+            <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Regs</th>
+            <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Paid</th>
+            <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Outstanding</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of coursePageData">
+            <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ c.name }}</p></td>
+            <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ c.registrations }}</p></td>
+            <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ c.paidAmount | number:'1.0-0' }}</p></td>
+            <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ c.outstandingAmount | number:'1.0-0' }}</p></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-white/[0.05]">
+      <div class="text-sm text-gray-500 dark:text-gray-400">
+        Showing {{ courseStart }} - {{ courseEnd }} of {{ courseBreakdown.length }}
+      </div>
+      <div class="flex items-center gap-2">
+        <button (click)="prevCourse()" [disabled]="coursePage === 1"
+          class="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40">
+          Prev
+        </button>
+        <span class="text-sm text-gray-600 dark:text-gray-300">Page {{ coursePage }} / {{ courseTotalPages }}</span>
+        <button (click)="nextCourse()" [disabled]="coursePage === courseTotalPages"
+          class="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="overflow-hidden rounded-2xl border border-gray-200 bg-white pt-4 dark:border-white/[0.05] dark:bg-white/[0.03] mt-6">
+  <div class="px-6 mb-4">
+    <h3 class="text-lg font-semibold text-gray-800 dark:text-white/90">Recent Registrations</h3>
+  </div>
+  <div class="max-w-full overflow-x-auto">
+    <table class="min-w-full">
+      <thead class="px-6 py-3.5 border-t border-gray-100 border-y bg-gray-50 dark:border-white/[0.05] dark:bg-gray-900">
+        <tr>
+          <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Reg #</th>
+          <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Date</th>
+          <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Branch</th>
+          <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Course</th>
+          <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Student</th>
+          <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Paid</th>
+          <th class="px-6 py-3 font-medium text-gray-500 sm:px-6 text-theme-xs dark:text-gray-400 text-start">Outstanding</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let r of recentPageData">
+          <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ r.registrationNumber }}</p></td>
+          <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ r.registrationDate | date:'mediumDate' }}</p></td>
+          <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ r.branchName }}</p></td>
+          <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ r.courseName }}</p></td>
+          <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ r.studentName }}</p></td>
+          <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ r.paidAmount | number:'1.0-0' }}</p></td>
+          <td class="px-4 sm:px-6 py-3.5"><p class="text-gray-700 text-theme-sm dark:text-gray-400">{{ r.outstandingAmount | number:'1.0-0' }}</p></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-white/[0.05]">
+    <div class="text-sm text-gray-500 dark:text-gray-400">
+      Showing {{ recentStart }} - {{ recentEnd }} of {{ recent.length }}
+    </div>
+    <div class="flex items-center gap-2">
+      <button (click)="prevRecent()" [disabled]="recentPage === 1"
+        class="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40">
+        Prev
+      </button>
+      <span class="text-sm text-gray-600 dark:text-gray-300">Page {{ recentPage }} / {{ recentTotalPages }}</span>
+      <button (click)="nextRecent()" [disabled]="recentPage === recentTotalPages"
+        class="px-3 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40">
+        Next
+      </button>
+    </div>
+  </div>
+</div>
+
