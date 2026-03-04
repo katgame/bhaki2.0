@@ -1,5 +1,5 @@
 export const environment = {
   production: true,
-  bhakiApi: 'https://www.bhakisystem.co.za:449/',
-  version: '1.0.14'
+  bhakiApi: 'https://www.bhakisystem.co.za:447/',
+  version: '1.0.20'
 };

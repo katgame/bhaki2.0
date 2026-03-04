@@ -11,6 +11,7 @@ import { InputFieldComponent } from '../input/input-field.component';
 import { Option, SelectComponent } from '../select/select.component';
 import { DatePickerComponent } from '../date-picker/date-picker.component';
 import { FormsModule } from '@angular/forms';
+import { ModalComponent } from '../../ui/modal/modal.component';
 
 // Services - adjust paths if your project has different locations
 import { BhakiService } from '../../../services/bhaki-service';
@@ -115,7 +116,8 @@ type AdminFormModel = {
     InputFieldComponent,
     SelectComponent,
     DatePickerComponent,
-    DropzoneComponent
+    DropzoneComponent,
+    ModalComponent
   ],
   templateUrl: './admin-registration.component.html',
   styles: ``
@@ -129,6 +131,10 @@ export class AdminRegistrationComponent implements OnInit {
   // Step tracking for mobile view
   currentStep = 1;
   totalSteps = 4;
+
+  // Success modal state
+  isSuccessModalOpen = false;
+  successRegistrationNumber: number | null = null;
 
   async onFilesDropped(files: File[]) {
     try {
@@ -411,6 +417,11 @@ export class AdminRegistrationComponent implements OnInit {
 
   get idType() {
     return this.registrationForm.get('idType') && this.registrationForm.get('idType')!.value;
+  }
+
+  closeSuccessModal() {
+    this.isSuccessModalOpen = false;
+    this.successRegistrationNumber = null;
   }
 
   // Helper method to get friendly field names for error messages
@@ -1003,7 +1014,9 @@ export class AdminRegistrationComponent implements OnInit {
           //scroll to the top of the page
           window.scrollTo(0, 0);
 
-          this.toastService.show('Your registration was successful with registration number :' + registrationNumber, 'success');
+          // Show success modal instead of toast
+          this.successRegistrationNumber = registrationNumber;
+          this.isSuccessModalOpen = true;
         },
         error: (error: any) => {
           this.showSpinner.next(false);

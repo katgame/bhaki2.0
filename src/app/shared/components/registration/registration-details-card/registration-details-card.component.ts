@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { Router } from '@angular/router';
 import { AppStore } from '../../../state/app.store';
 import { Registration } from '../../../models/registration';
 import { Subscription } from 'rxjs';
@@ -34,7 +35,9 @@ export class RegistrationDetailsCardComponent implements OnInit, OnDestroy {
   
   // Modal state
   isEditModalOpen = false;
+  isDeleteModalOpen = false;
   isAdmin = false;
+  isDeleting = false;
   
   // Form data
   editForm: {
@@ -70,7 +73,8 @@ export class RegistrationDetailsCardComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private bhakiService: BhakiService,
     private tokenStorage: TokenStorageService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private router: Router
   ) {
     this.userInfo = this.tokenStorage.getUser();
     // derive admin flag defensively from stored user roles
@@ -210,6 +214,44 @@ export class RegistrationDetailsCardComponent implements OnInit, OnDestroy {
     };
   }
 
+  openDeleteModal(): void {
+    if (!this.registrationDetails || !this.isAdmin) return;
+    this.isDeleteModalOpen = true;
+  }
+
+  closeDeleteModal(): void {
+    if (!this.isDeleting) {
+      this.isDeleteModalOpen = false;
+    }
+  }
+
+  confirmDelete(): void {
+    if (!this.registrationDetails || !this.isAdmin) return;
+    // API expects registration number (int), not Guid id
+    const registrationNumber = this.registrationDetails?.registration?.registrationNumber;
+    const user = this.userInfo as any;
+    const userId = user?.user?.id ?? user?.id ?? '';
+    if (registrationNumber == null || registrationNumber === '' || !userId) {
+      this.toastService.show('Unable to delete: missing registration or user context', 'error');
+      return;
+    }
+    this.isDeleting = true;
+    this.bhakiService.deleteRegistration(registrationNumber, userId).subscribe({
+      next: () => {
+        this.isDeleting = false;
+        this.isDeleteModalOpen = false;
+        this.store.setRegistrationDetails(null as any);
+        this.toastService.show('Registration deleted successfully', 'success');
+        this.router.navigate(['/registration-report']);
+      },
+      error: (err) => {
+        console.error('Error deleting registration:', err);
+        this.isDeleting = false;
+        this.toastService.show(err?.error?.message || 'Error deleting registration', 'error');
+      }
+    });
+  }
+
   onBranchChange(branchId: string): void {
     this.editForm.branchId = branchId;
     this.editForm.courseId = ''; // Reset course when branch changes
@@ -256,7 +298,6 @@ export class RegistrationDetailsCardComponent implements OnInit, OnDestroy {
         ? { ...this.registrationDetails.course, id: this.editForm.courseId, name: this.courseOptions.find(c => c.value === this.editForm.courseId)?.label || '' }
         : this.registrationDetails.course
     };
-    debugger;
     if(updatedDetails.registration.outstandingAmount === null || updatedDetails.registration.outstandingAmount === undefined || updatedDetails.registration.outstandingAmount === "") {
       updatedDetails.registration.outstandingAmount = 0;
     } 
