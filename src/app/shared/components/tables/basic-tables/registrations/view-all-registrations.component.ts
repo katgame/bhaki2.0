@@ -119,7 +119,7 @@ export class ViewAllRegistrationsComponent implements OnInit {
     if (this.dateFrom) {
       const fromDate = new Date(this.dateFrom);
       data = data.filter((reg) => {
-        const regDate = new Date(reg.registrationDate);
+        const regDate = new Date(reg.createdOn);
         return regDate >= fromDate;
       });
     }
@@ -128,7 +128,7 @@ export class ViewAllRegistrationsComponent implements OnInit {
       const toDate = new Date(this.dateTo);
       toDate.setHours(23, 59, 59, 999); // Include entire end date
       data = data.filter((reg) => {
-        const regDate = new Date(reg.registrationDate);
+        const regDate = new Date(reg.createdOn);
         return regDate <= toDate;
       });
     }
@@ -141,7 +141,7 @@ export class ViewAllRegistrationsComponent implements OnInit {
         let valB: any = b[column];
 
         // Handle date fields
-        const dateFields: string[] = ['registrationDate', 'createdOn', 'commencementDate'];
+        const dateFields: string[] = ['createdOn', 'commencementDate'];
         if (dateFields.includes(column as string)) {
           valA = valA ? new Date(valA).getTime() : 0;
           valB = valB ? new Date(valB).getTime() : 0;
